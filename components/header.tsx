@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { Rocket } from "lucide-react"
 
@@ -12,31 +13,33 @@ export default function Header() {
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div className="flex items-center justify-center mb-3">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 260,
-            damping: 20,
-            delay: 0.2,
-          }}
-          className="relative"
-        >
-          <Rocket size={48} className="text-stellar-cyan dark:text-stellar-cyan" />
+        <Link href="/" aria-label="Go to landing page">
           <motion.div
-            className="absolute inset-0 bg-stellar-cyan/20 dark:bg-stellar-cyan/30 rounded-full"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.7, 0, 0.7],
-            }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             transition={{
-              duration: 2,
-              repeat: Number.POSITIVE_INFINITY,
-              repeatType: "loop",
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+              delay: 0.2,
             }}
-          />
-        </motion.div>
+            className="relative inline-block cursor-pointer"
+          >
+            <Rocket size={48} className="text-stellar-cyan dark:text-stellar-cyan" />
+            <motion.div
+              className="absolute inset-0 bg-stellar-cyan/20 dark:bg-stellar-cyan/30 rounded-full"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.7, 0, 0.7],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "loop",
+              }}
+            />
+          </motion.div>
+        </Link>
       </div>
 
       <motion.h1
@@ -45,7 +48,9 @@ export default function Header() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.3 }}
       >
-        AstroDoc
+        <Link href="/" className="inline-block" aria-label="Go to landing page">
+          AstroDoc
+        </Link>
       </motion.h1>
 
       <motion.p

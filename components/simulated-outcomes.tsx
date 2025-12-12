@@ -323,12 +323,12 @@ export default function SimulatedOutcomes({ results }: SimulatedOutcomesProps) {
             onValueChange={setActiveTab}
             className="w-full "
           >
-            <TabsList className="grid grid-cols-3 gap-1 mb-8 bg-black/40 backdrop-blur-md rounded-xl shadow-sm border border-stellar-cyan/10">
+            <TabsList className="flex gap-2 mb-8 bg-black/40 backdrop-blur-md rounded-xl shadow-sm border border-stellar-cyan/10 overflow-x-auto py-2 px-1">
               {paths.map((path) => (
                 <TabsTrigger
                   key={path.id}
                   value={path.id}
-                  className="flex-1 min-w-[120px] relative px-3 transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-stellar-cyan/10 data-[state=active]:to-cosmic-purple/10 data-[state=active]:text-stellar-cyan data-[state=active]:font-medium hover:bg-stellar-cyan/5 group rounded-lg flex justify-center items-center"
+                  className="flex-none min-w-[140px] relative px-3 transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-stellar-cyan/10 data-[state=active]:to-cosmic-purple/10 data-[state=active]:text-stellar-cyan data-[state=active]:font-medium hover:bg-stellar-cyan/5 group rounded-lg flex justify-center items-center"
                 >
                   <motion.div
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-stellar-cyan to-cosmic-purple rounded-full"
@@ -339,7 +339,7 @@ export default function SimulatedOutcomes({ results }: SimulatedOutcomesProps) {
                     }}
                     transition={{ duration: 0.4 }}
                   />
-                  <div className="relative z-10 flex items-center justify-center gap-2 py-2">
+                    <div className="relative z-10 flex items-center justify-center gap-2 py-2 px-2">
                     <motion.div
                       className={`flex items-center justify-center rounded-full ${path.tag.bgColor} shadow-sm p-1.5`}
                       initial={{ scale: 0.8 }}
