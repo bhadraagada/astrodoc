@@ -87,7 +87,7 @@ export const createChat = mutation({
     await ctx.db.insert("messages", {
       chatId,
       userId,
-      content: "Hello! I'm ParaDoc, your health assistant. How can I help you today?",
+      content: "Hello! I'm AstroDoc, your health assistant. How can I help you today?",
       isUser: false,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",

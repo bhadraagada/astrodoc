@@ -238,7 +238,7 @@ export function ChatSidebar({
             </div>
           </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">
-            ParaDoc Health Assistant
+            AstroDoc Health Assistant
           </p>
         </div>
       </aside>

@@ -3,7 +3,6 @@
 import SymptomInput, { ResultData } from "@/components/symptom-input";
 import ChatLayoutWrapper from "@/components/chat-layout-wrapper";
 import Header from "@/components/header";
-import LoadingScreen from "@/components/loading-screen";
 import SimulatedOutcomes from "@/components/simulated-outcomes";
 import {
   useChatById,
@@ -11,25 +10,19 @@ import {
   useConvexChat,
 } from "@/hooks/use-convex-chat";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
-  ArrowRight,
   BookOpen,
   Brain,
   Ear,
-  ExternalLink,
   Lightbulb,
   Pill,
   Radar,
   Thermometer,
-  TriangleAlert,
 } from "lucide-react";
-import Link from "next/link";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
 
 // Health tips that will rotate
 const healthTips = [
@@ -154,8 +147,9 @@ export default function ChatPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentTip, setCurrentTip] = useState(healthTips[0]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [stars, setStars] = useState<Array<{ top: number; left: number; duration: number; delay: number }>>([]);
-
+  const [stars, setStars] = useState<
+    Array<{ top: number; left: number; duration: number; delay: number }>
+  >([]);
 
   useEffect(() => {
     // Generate stars on client side only
@@ -215,7 +209,9 @@ export default function ChatPage() {
         <div className="fixed inset-0 bg-deep-space flex items-center justify-center z-[100]">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-stellar-cyan/30 border-t-stellar-cyan rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-stellar-cyan font-space tracking-wider animate-pulse">ESTABLISHING ORBITAL UPLINK...</p>
+            <p className="text-stellar-cyan font-space tracking-wider animate-pulse">
+              ESTABLISHING ORBITAL UPLINK...
+            </p>
           </div>
         </div>
       </ChatLayoutWrapper>
@@ -225,7 +221,7 @@ export default function ChatPage() {
   // AstroDoc Layout wrapped in ChatLayoutWrapper
   return (
     <ChatLayoutWrapper>
-      <div className="min-h-screen bg-deep-space transition-colors duration-500 overflow-hidden max-w-5xl mx-auto relative">
+      <div className="min-h-screen bg-deep-space transition-colors duration-500 overflow-auto w-full relative p-4">
         {/* Stars/Noise Texture Overlay */}
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 pointer-events-none mix-blend-overlay"></div>
 
@@ -314,10 +310,7 @@ export default function ChatPage() {
             <div className="absolute -inset-0.5 bg-gradient-to-r from-stellar-cyan/30 to-cosmic-purple/30 rounded-lg blur-sm opacity-50"></div>
             <div className="relative bg-black/40 backdrop-blur-md rounded-lg p-4 border border-stellar-cyan/20 flex items-center shadow-[0_0_15px_rgba(6,182,212,0.1)]">
               <div className="bg-stellar-cyan/10 p-2 rounded-full mr-3 border border-stellar-cyan/30">
-                <Lightbulb
-                  size={18}
-                  className="text-stellar-cyan"
-                />
+                <Lightbulb size={18} className="text-stellar-cyan" />
               </div>
               <div className="flex-1">
                 <h3 className="text-xs font-bold text-stellar-cyan uppercase tracking-widest font-space mb-1">
@@ -365,25 +358,32 @@ export default function ChatPage() {
                     <button
                       key={index}
                       onClick={() => setSelectedCategory(category.name)}
-                      className={`flex flex-col items-center p-3 rounded-lg transition-all duration-200 border group ${selectedCategory === category.name
-                        ? "bg-stellar-cyan/10 border-stellar-cyan shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                        : "bg-deep-space/50 border-white/5 hover:bg-white/5 hover:border-stellar-cyan/50"
-                        }`}
+                      className={`flex flex-col items-center p-3 rounded-lg transition-all duration-200 border group ${
+                        selectedCategory === category.name
+                          ? "bg-stellar-cyan/10 border-stellar-cyan shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                          : "bg-deep-space/50 border-white/5 hover:bg-white/5 hover:border-stellar-cyan/50"
+                      }`}
                     >
                       <div
-                        className={`p-3 rounded-full mb-2 transition-all duration-200 ${selectedCategory === category.name
-                          ? "bg-stellar-cyan/20 text-stellar-cyan"
-                          : "bg-white/5 text-moon-silver group-hover:text-stellar-cyan group-hover:bg-stellar-cyan/10"
-                          }`}
+                        className={`p-3 rounded-full mb-2 transition-all duration-200 ${
+                          selectedCategory === category.name
+                            ? "bg-stellar-cyan/20 text-stellar-cyan"
+                            : "bg-white/5 text-moon-silver group-hover:text-stellar-cyan group-hover:bg-stellar-cyan/10"
+                        }`}
                       >
                         {category.icon}
                       </div>
-                      <span className={`text-sm font-medium transition-colors ${selectedCategory === category.name ? "text-stellar-cyan" : "text-moon-silver group-hover:text-white"
-                        }`}>
+                      <span
+                        className={`text-sm font-medium transition-colors ${
+                          selectedCategory === category.name
+                            ? "text-stellar-cyan"
+                            : "text-moon-silver group-hover:text-white"
+                        }`}
+                      >
                         {category.name}
                       </span>
                       <span className="text-[10px] text-gray-500 mt-1 text-center line-clamp-1 font-tech uppercase tracking-wide">
-                        {category.examples.split(',')[0]}
+                        {category.examples.split(",")[0]}
                       </span>
                     </button>
                   ))}
@@ -407,27 +407,14 @@ export default function ChatPage() {
               {/* Decorative border */}
               <div className="absolute -inset-0.5 bg-gradient-to-r from-stellar-cyan/40 via-nebula-blue/40 to-cosmic-purple/40 rounded-xl blur-sm opacity-50"></div>
 
-              <div className="relative bg-black/60 backdrop-blur-xl rounded-xl shadow-2xl p-8 border border-white/10">
-                <Suspense
-                  fallback={
-                    <div className="h-[300px] flex items-center justify-center">
-                      <div className="flex flex-col items-center">
-                        <div className="w-16 h-16 border-4 border-stellar-cyan/30 border-t-stellar-cyan rounded-full animate-spin"></div>
-                        <p className="mt-4 text-stellar-cyan font-medium font-tech tracking-wider animate-pulse">
-                          ESTABLISHING ORBITAL UPLINK...
-                        </p>
-                      </div>
-                    </div>
-                  }
-                >
-                  <SymptomInput
-                    selectedCategory={selectedCategory}
-                    chatId={chatId}
-                    initialMessages={formattedMessages}
-                    onNewMessage={handleNewMessage}
-                    onSimulationResult={setResult}
-                  />
-                </Suspense>
+              <div className="relative bg-black/60 backdrop-blur-xl rounded-xl shadow-2xl p-4 md:p-8 border border-white/10">
+                <SymptomInput
+                  selectedCategory={selectedCategory}
+                  chatId={chatId}
+                  initialMessages={formattedMessages}
+                  onNewMessage={handleNewMessage}
+                  onSimulationResult={setResult}
+                />
               </div>
             </motion.div>
 
@@ -449,21 +436,7 @@ export default function ChatPage() {
             </motion.div>
 
             {/* Emergency Warning Signs and Resources can be added here similarly if needed, truncating for brevity but ideally include all */}
-
           </main>
-          <div className="fixed top-6 right-6 z-50">
-            <SignedOut>
-              <Button
-                onClick={() => router.push("/sign-in")}
-                className="bg-gradient-to-r from-stellar-cyan to-nebula-blue text-white hover:from-cyan-400 hover:to-blue-600 transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)] border border-white/10 font-space tracking-wide"
-              >
-                Identify
-              </Button>
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </div>
         </div>
       </div>
     </ChatLayoutWrapper>
