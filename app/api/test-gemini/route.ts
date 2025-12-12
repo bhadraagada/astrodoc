@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { testGeminiAPI, generateHealthTimelines, debugGeminiAPI } from '@/lib/gemini';
+import { testGeminiAPI, generateHealthTimelines, generateHealthTimelinesStream, debugGeminiAPI } from '@/lib/gemini';
 
 export async function GET() {
   try {
@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { symptom, choices, includeImages = true } = body;
+    const { symptom, choices, stream = true, conversationHistory = [] } = body;
     
     if (!symptom) {
       return NextResponse.json({
@@ -29,6 +29,31 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
     
+    // Use streaming by default
+    if (stream) {
+      const encoder = new TextEncoder();
+      const customReadable = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of generateHealthTimelinesStream(symptom, conversationHistory, choices)) {
+              controller.enqueue(encoder.encode(chunk));
+            }
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        },
+      });
+
+      return new Response(customReadable, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Transfer-Encoding': 'chunked',
+        },
+      });
+    }
+    
+    // Fallback to non-streaming
     const timelines = await generateHealthTimelines(symptom, choices);
     
     return NextResponse.json({

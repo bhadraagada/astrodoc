@@ -1,4 +1,8 @@
-import { SimulationResult, TimelineChoice } from "@/utils/gemini-api";
+import {
+  SimulationResult,
+  TimelineChoice,
+  generateMedicalSimulationStream,
+} from "@/utils/gemini-api";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import { SendHorizontal, StopCircleIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -53,6 +57,7 @@ export default function SymptomInput({
       isUser: boolean;
       timestamp: string;
       simulationData?: any;
+      isStreaming?: boolean;
     }>
   >([
     {
@@ -168,76 +173,148 @@ export default function SymptomInput({
     const signal = abortControllerRef.current.signal;
 
     try {
-      // Call the Gemini API
-      const processingMessage = {
-        content:
-          "I'm analyzing your symptoms and generating possible outcomes...",
-        isUser: false,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-
-      // Add a processing message
-      setMessages((prev) => [...prev, processingMessage]);
-
-      // Call the API with the abort signal
+      // Call the API with streaming
       let result;
+      let streamedText = "";
+
       try {
-        result = await generateMedicalSimulationWithAbort(
+        // Add initial AI message that will be updated with streaming content
+        const aiMessageIndex = messages.length + 1; // +1 because we already added user message
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: "",
+            isUser: false,
+            timestamp: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            isStreaming: true,
+          },
+        ]);
+
+        // Build conversation history (excluding the initial greeting and current message)
+        const conversationHistory = messages.slice(1).map((msg) => ({
+          content: msg.content,
+          isUser: msg.isUser,
+        }));
+
+        result = await generateMedicalSimulationStream(
           symptomWithContext,
-          signal
+          (chunk) => {
+            // Just accumulate chunks, don't update UI yet
+            streamedText += chunk;
+            // Keep the loading state active
+          },
+          signal,
+          conversationHistory
         );
+
         console.log("API result:", result); // Log the result for debugging
-        
-        // Check if the result matches the ResultData structure
-        if (result && 'timelines' in result && Array.isArray(result.timelines) && onSimulationResult) {
+
+        let formattedContent = "";
+
+        // Check if this is a timeline analysis (JSON) or a follow-up response (plain text)
+        if (result && typeof result === "object") {
+          if ("type" in result && result.type === "text") {
+            // This is a follow-up response - use the plain text
+            formattedContent = result.content;
+          } else if ("timelines" in result && Array.isArray(result.timelines)) {
+            // This is a timeline analysis - format it nicely
+            formattedContent = `**Based on your symptom description, I've analyzed ${
+              result.timelines?.length || 0
+            } possible outcomes:**\n\n`;
+
+            result.timelines.forEach((timeline: any, index: number) => {
+              formattedContent += `**Path ${index + 1}: ${timeline.path}**\n`;
+              formattedContent += `_${timeline.action}_\n\n`;
+              formattedContent += `• Risk Level: ${timeline.riskPercentage}%\n`;
+              formattedContent += `• Recovery Chance: ${timeline.recoveryPercentage}%\n\n`;
+            });
+
+            if (result.bestPath) {
+              formattedContent += `\n**Recommended Path:**\n`;
+              formattedContent += `Path ${
+                (result.bestPath.pathIndex ?? 0) + 1
+              } - ${result.bestPath.explanation}\n\n`;
+            }
+
+            if (result.disclaimer) {
+              formattedContent += `\n_${result.disclaimer}_`;
+            }
+          } else {
+            // Unknown format, use streamed text
+            formattedContent = streamedText;
+          }
+        } else {
+          // Fallback to streamed text
+          formattedContent = streamedText;
+        }
+
+        // Update with formatted content and mark streaming as complete
+        setMessages((prev) => {
+          const updated = [...prev];
+          if (updated[aiMessageIndex]) {
+            updated[aiMessageIndex].content = formattedContent;
+            updated[aiMessageIndex].isStreaming = false;
+          }
+          return updated;
+        });
+
+        // Check if the result matches the ResultData structure (only for timeline analysis)
+        if (
+          result &&
+          typeof result === "object" &&
+          "timelines" in result &&
+          Array.isArray(result.timelines) &&
+          onSimulationResult
+        ) {
           onSimulationResult(result as unknown as ResultData);
         }
 
-        toast.success("Symptoms processed successfully!");
+        toast.success("Response received!");
       } catch (apiError) {
-        toast.error("Failed to process symptoms. Please try again.");
         console.error("API error:", apiError);
+
         // Check if this is an abort error
         if (apiError instanceof Error && apiError.name === "AbortError") {
           console.log("Request was aborted");
           return; // Exit early, the cancel handler will update the UI
         }
-        throw apiError; // Re-throw to be caught by outer catch
+
+        // Update the streaming message with error
+        setMessages((prev) => {
+          const updated = [...prev];
+          if (updated[aiMessageIndex]) {
+            updated[aiMessageIndex].content =
+              "I apologize, but I encountered an error while analyzing your symptoms. This could be due to:\n\n• High API usage - please try again in a minute\n• Network connectivity issues\n• Invalid response format\n\nPlease try submitting your symptoms again.";
+            updated[aiMessageIndex].isStreaming = false;
+          }
+          return updated;
+        });
+
+        toast.error("Failed to process symptoms. Please try again.");
+        setIsLocalLoading(false);
+        return; // Exit early instead of throwing
       }
-
-      // Format the simulation data into a chat message
-      const resultMessage = {
-        content: formatSimulationResult(result),
-        isUser: false,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        simulationData: result,
-      };
-
-      // Replace the processing message with the result
-      setMessages((prev) => [...prev.slice(0, -1), resultMessage]);
     } catch (error) {
       console.error("Error generating simulation:", error);
 
-      // Show error message
-      const errorMessage = {
-        content: `I apologize, but I encountered an error while analyzing your symptoms. Please try again later.${
-          error instanceof Error ? " Error: " + error.message : ""
-        }`,
-        isUser: false,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-
-      // Replace the processing message with the error
-      setMessages((prev) => [...prev.slice(0, -1), errorMessage]);
+      // Show error message in the message bubble
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastMsgIndex = updated.length - 1;
+        if (lastMsgIndex >= 0 && !updated[lastMsgIndex].isUser) {
+          updated[
+            lastMsgIndex
+          ].content = `I apologize, but I encountered an error while analyzing your symptoms. Please try again later.${
+            error instanceof Error ? "\n\nError: " + error.message : ""
+          }`;
+          updated[lastMsgIndex].isStreaming = false;
+        }
+        return updated;
+      });
     } finally {
       setIsLocalLoading(false);
       abortControllerRef.current = null;
@@ -402,36 +479,69 @@ export default function SymptomInput({
                   msg.isUser ? "" : "text-gray-800 dark:text-gray-200"
                 }`}
               >
-                {msg.content.split("\n").map((line, i) => {
-                  // Handle markdown-style bold text with **
-                  const boldPattern = /\*\*(.*?)\*\*/g;
-                  const processedLine = line.replace(
-                    boldPattern,
-                    "<strong class='font-semibold text-xl line-clamp-1 pt-4 text-rose-700 dark:text-rose-300'>$1</strong>"
-                  );
+                {msg.isStreaming ? (
+                  <div className="flex flex-col gap-2">
+                    <span className="inline-flex items-center gap-2 text-sm">
+                      <span className="flex gap-1">
+                        <span
+                          className="animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        >
+                          ●
+                        </span>
+                        <span
+                          className="animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        >
+                          ●
+                        </span>
+                        <span
+                          className="animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        >
+                          ●
+                        </span>
+                      </span>
+                      <span className="text-rose-500 dark:text-rose-400">
+                        Analyzing your symptoms and generating timelines...
+                      </span>
+                    </span>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      This may take a few moments. Please wait.
+                    </div>
+                  </div>
+                ) : (
+                  msg.content.split("\n").map((line, i) => {
+                    // Handle markdown-style bold text with **
+                    const boldPattern = /\*\*(.*?)\*\*/g;
+                    const processedLine = line.replace(
+                      boldPattern,
+                      "<strong class='font-semibold text-xl line-clamp-1 pt-4 text-rose-700 dark:text-rose-300'>$1</strong>"
+                    );
 
-                  // Handle markdown-style italics with _
-                  const italicPattern = /_(.*?)_/g;
-                  const finalProcessedLine = processedLine.replace(
-                    italicPattern,
-                    "<em class='text-gray-600 dark:text-gray-400 italic'>$1</em>"
-                  );
+                    // Handle markdown-style italics with _
+                    const italicPattern = /_(.*?)_/g;
+                    const finalProcessedLine = processedLine.replace(
+                      italicPattern,
+                      "<em class='text-gray-600 dark:text-gray-400 italic'>$1</em>"
+                    );
 
-                  // Handle bullet points
-                  const bulletPattern = /^• (.*)/g;
-                  const withBullets = finalProcessedLine.replace(
-                    bulletPattern,
-                    "<span class='flex items-start'><span class='text-rose-500 dark:text-rose-400 mr-1'>•</span><span>$1</span></span>"
-                  );
+                    // Handle bullet points
+                    const bulletPattern = /^• (.*)/g;
+                    const withBullets = finalProcessedLine.replace(
+                      bulletPattern,
+                      "<span class='flex items-start'><span class='text-rose-500 dark:text-rose-400 mr-1'>•</span><span>$1</span></span>"
+                    );
 
-                  return (
-                    <p
-                      key={i}
-                      className="mb-1.5"
-                      dangerouslySetInnerHTML={{ __html: withBullets }}
-                    />
-                  );
-                })}
+                    return (
+                      <p
+                        key={i}
+                        className="mb-1.5"
+                        dangerouslySetInnerHTML={{ __html: withBullets }}
+                      />
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
@@ -480,43 +590,3 @@ export default function SymptomInput({
     </div>
   );
 }
-
-// Add this function to your component or import it from utils/gemini-api.ts
-const generateMedicalSimulationWithAbort = async (
-  symptom: string,
-  signal?: AbortSignal,
-  choices: TimelineChoice[] = [
-    "do nothing",
-    "seek medical attention",
-    "self-medicate with over-the-counter remedies",
-  ]
-): Promise<SimulationResult> => {
-  try {
-    const response = await fetch("/api/test-gemini", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        symptom,
-        choices,
-      }),
-      signal, // Pass the abort signal to fetch
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data.status === "success") {
-      return data.data;
-    } else {
-      throw new Error(data.message || "Failed to generate simulations");
-    }
-  } catch (error) {
-    console.error("Error in generateMedicalSimulation:", error);
-    throw error;
-  }
-};
