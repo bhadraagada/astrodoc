@@ -8,14 +8,33 @@ import { SendHorizontal, StopCircleIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { Id } from "@/convex/_generated/dataModel";
 
 // Add this at the top of your component
 // Update the SymptomInputProps type
 type SymptomInputProps = {
   selectedCategory?: string | null;
   onSubmit?: (symptom: string) => void;
-  onSimulationResult?: (result: ResultData) => void; // Add this line
+  onSimulationResult?: (result: ResultData) => void;
   isLoading?: boolean;
+  chatId?: Id<"chats">;
+  initialMessages?: Array<{
+    content: string;
+    isUser: boolean;
+    timestamp: string;
+    simulationData?: any;
+    isStreaming?: boolean;
+  }>;
+  onMessagesChange?: (
+    messages: Array<{
+      content: string;
+      isUser: boolean;
+      timestamp: string;
+      simulationData?: any;
+      isStreaming?: boolean;
+    }>
+  ) => void;
+  onNewMessage?: (content: string, isUser: boolean) => Promise<void>;
 };
 
 // Define the structure that matches result.json
@@ -46,8 +65,12 @@ import { toast } from "sonner";
 export default function SymptomInput({
   selectedCategory,
   onSubmit,
-  onSimulationResult, // Add this parameter
+  onSimulationResult,
   isLoading: externalLoading = false,
+  chatId,
+  initialMessages,
+  onMessagesChange,
+  onNewMessage,
 }: SymptomInputProps) {
   const { user } = useUser();
   const [input, setInput] = useState("");
@@ -59,17 +82,19 @@ export default function SymptomInput({
       simulationData?: any;
       isStreaming?: boolean;
     }>
-  >([
-    {
-      content:
-        "Hello! I'm ParaDoc, your health assistant. How can I help you today?",
-      isUser: false,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-  ]);
+  >(
+    initialMessages || [
+      {
+        content:
+          "Hello! I'm ParaDoc, your health assistant. How can I help you today?",
+        isUser: false,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]
+  );
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   // Add a ref to store the current abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -79,6 +104,13 @@ export default function SymptomInput({
 
   // Use either external or local loading state
   const isLoading = externalLoading || isLocalLoading;
+
+  // Notify parent of message changes
+  useEffect(() => {
+    if (onMessagesChange) {
+      onMessagesChange(messages);
+    }
+  }, [messages, onMessagesChange]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -154,6 +186,11 @@ export default function SymptomInput({
     };
 
     setMessages((prev) => [...prev, userMessage]);
+
+    // Save user message to Convex if onNewMessage is provided
+    if (onNewMessage) {
+      await onNewMessage(input, true);
+    }
 
     // Call the onSubmit prop if provided
     if (onSubmit) {
@@ -261,6 +298,11 @@ export default function SymptomInput({
           }
           return updated;
         });
+
+        // Save AI response to Convex if onNewMessage is provided
+        if (onNewMessage && formattedContent) {
+          await onNewMessage(formattedContent, false);
+        }
 
         // Check if the result matches the ResultData structure (only for timeline analysis)
         if (
@@ -511,36 +553,75 @@ export default function SymptomInput({
                     </div>
                   </div>
                 ) : (
-                  msg.content.split("\n").map((line, i) => {
-                    // Handle markdown-style bold text with **
-                    const boldPattern = /\*\*(.*?)\*\*/g;
-                    const processedLine = line.replace(
-                      boldPattern,
-                      "<strong class='font-semibold text-xl line-clamp-1 pt-4 text-rose-700 dark:text-rose-300'>$1</strong>"
-                    );
+                  (() => {
+                    // Try to detect if content is raw JSON and format it
+                    let displayContent = msg.content;
+                    if (
+                      displayContent.trim().startsWith("{") ||
+                      displayContent.includes('"timelines"')
+                    ) {
+                      try {
+                        const parsed = JSON.parse(displayContent);
+                        if (
+                          parsed.timelines &&
+                          Array.isArray(parsed.timelines)
+                        ) {
+                          displayContent = `**Based on your symptom description, I've analyzed ${parsed.timelines.length} possible outcomes:**\n\n`;
+                          parsed.timelines.forEach(
+                            (timeline: any, index: number) => {
+                              displayContent += `**Path ${index + 1}: ${
+                                timeline.path
+                              }**\n`;
+                              displayContent += `_${timeline.action}_\n\n`;
+                              displayContent += `• Risk Level: ${timeline.riskPercentage}%\n`;
+                              displayContent += `• Recovery Chance: ${timeline.recoveryPercentage}%\n\n`;
+                            }
+                          );
+                          if (parsed.bestPath) {
+                            displayContent += `\n**Recommended Path:**\nPath ${
+                              (parsed.bestPath.pathIndex ?? 0) + 1
+                            } - ${parsed.bestPath.explanation}\n\n`;
+                          }
+                          if (parsed.disclaimer) {
+                            displayContent += `\n_${parsed.disclaimer}_`;
+                          }
+                        }
+                      } catch (e) {
+                        // If JSON parsing fails, use original content
+                      }
+                    }
 
-                    // Handle markdown-style italics with _
-                    const italicPattern = /_(.*?)_/g;
-                    const finalProcessedLine = processedLine.replace(
-                      italicPattern,
-                      "<em class='text-gray-600 dark:text-gray-400 italic'>$1</em>"
-                    );
+                    return displayContent.split("\n").map((line, i) => {
+                      // Handle markdown-style bold text with **
+                      const boldPattern = /\*\*(.*?)\*\*/g;
+                      const processedLine = line.replace(
+                        boldPattern,
+                        "<strong class='font-semibold text-xl line-clamp-1 pt-4 text-rose-700 dark:text-rose-300'>$1</strong>"
+                      );
 
-                    // Handle bullet points
-                    const bulletPattern = /^• (.*)/g;
-                    const withBullets = finalProcessedLine.replace(
-                      bulletPattern,
-                      "<span class='flex items-start'><span class='text-rose-500 dark:text-rose-400 mr-1'>•</span><span>$1</span></span>"
-                    );
+                      // Handle markdown-style italics with _
+                      const italicPattern = /_(.*?)_/g;
+                      const finalProcessedLine = processedLine.replace(
+                        italicPattern,
+                        "<em class='text-gray-600 dark:text-gray-400 italic'>$1</em>"
+                      );
 
-                    return (
-                      <p
-                        key={i}
-                        className="mb-1.5"
-                        dangerouslySetInnerHTML={{ __html: withBullets }}
-                      />
-                    );
-                  })
+                      // Handle bullet points
+                      const bulletPattern = /^• (.*)/g;
+                      const withBullets = finalProcessedLine.replace(
+                        bulletPattern,
+                        "<span class='flex items-start'><span class='text-rose-500 dark:text-rose-400 mr-1'>•</span><span>$1</span></span>"
+                      );
+
+                      return (
+                        <p
+                          key={i}
+                          className="mb-1.5"
+                          dangerouslySetInnerHTML={{ __html: withBullets }}
+                        />
+                      );
+                    });
+                  })()
                 )}
               </div>
             </div>
