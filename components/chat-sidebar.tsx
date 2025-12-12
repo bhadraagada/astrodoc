@@ -271,22 +271,22 @@ function ChatItem({
   return (
     <Link
       href={`/chats/${chat.id}`}
-      className={`group relative flex items-start gap-3 px-3 py-3 rounded-r-none rounded-l-lg mb-1 transition-all duration-300 border-l-2 ${isActive
-          ? "bg-stellar-cyan/10 border-stellar-cyan/80 shadow-[inset_10px_0_20px_rgba(6,182,212,0.1)]"
-          : "hover:bg-white/5 border-transparent hover:border-white/20"
+      className={`group relative flex items-center gap-3 px-3 py-3 rounded-r-none rounded-l-lg mb-1 transition-all duration-300 border-l-2 ${isActive
+        ? "bg-stellar-cyan/10 border-stellar-cyan/80 shadow-[inset_10px_0_20px_rgba(6,182,212,0.1)]"
+        : "hover:bg-white/5 border-transparent hover:border-white/20"
         }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`mt-0.5 transition-colors duration-300 ${isActive ? "text-stellar-cyan" : "text-moon-silver/50 group-hover:text-moon-silver"}`}>
+      <div className={`flex-shrink-0 transition-colors duration-300 ${isActive ? "text-stellar-cyan" : "text-moon-silver/50 group-hover:text-moon-silver"}`}>
         <MessageSquare className="h-4 w-4" />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 grid gap-0.5">
         <p
           className={`text-sm font-medium truncate font-tech tracking-wide transition-colors ${isActive
-              ? "text-star-white"
-              : "text-moon-silver group-hover:text-white"
+            ? "text-star-white"
+            : "text-moon-silver group-hover:text-white"
             }`}
         >
           {chat.title || "Untitled Simulation"}
@@ -296,8 +296,8 @@ function ChatItem({
         </p>
       </div>
 
-      {/* Date display or Delete action */}
-      <div className="h-full flex items-center">
+      {/* Date display or Delete action - Flex item, not absolute */}
+      <div className="flex-shrink-0 w-8 flex justify-center items-center h-full ml-1">
         {isHovered ? (
           <button
             onClick={(e) => {
@@ -305,7 +305,7 @@ function ChatItem({
               e.stopPropagation();
               onDelete(chat.id);
             }}
-            className="p-1.5 rounded-md hover:bg-red-500/20 text-moon-silver hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-md bg-deep-space hover:bg-red-500/20 text-moon-silver hover:text-red-400 transition-colors border border-white/10 shadow-lg"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>

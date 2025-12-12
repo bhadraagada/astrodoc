@@ -288,24 +288,21 @@ function ChatItem({
   return (
     <Link
       href={`/chats/${chat.id}`}
-      className={`group relative flex items-start gap-2 px-2 py-2 rounded-lg mb-1 transition-all ${
-        isActive
+      className={`group relative flex items-start gap-2 px-2 py-2 rounded-lg mb-1 transition-all ${isActive
           ? "bg-rose-950/30 border-l-2 border-rose-500"
           : "hover:bg-white/5"
-      }`}
+        }`}
       onMouseEnter={onHover}
       onMouseLeave={onHoverEnd}
     >
       <MessageCircle
-        className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
-          isActive ? "text-rose-500" : "text-gray-400"
-        }`}
+        className={`h-4 w-4 mt-0.5 flex-shrink-0 ${isActive ? "text-rose-500" : "text-gray-400"
+          }`}
       />
       <div className="flex-1 min-w-0 overflow-hidden">
         <p
-          className={`text-sm font-medium truncate max-w-full ${
-            isActive ? "text-rose-300" : "text-gray-300"
-          }`}
+          className={`text-sm font-medium truncate max-w-full ${isActive ? "text-rose-300" : "text-gray-300"
+            }`}
         >
           {chat.title}
         </p>
