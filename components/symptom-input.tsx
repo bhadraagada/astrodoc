@@ -56,12 +56,25 @@ export default function SymptomInput({
       content:
         "Systems Online. I'm AstroDoc, your mission health specialist. Report biometric status or symptoms.",
       isUser: false,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      timestamp: "Now",
     },
   ]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Update the timestamp to local time on client mount
+    setMessages(prev => {
+      const newMessages = [...prev];
+      if (newMessages[0]) {
+        newMessages[0].timestamp = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+      return newMessages;
+    });
+  }, []);
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -136,6 +136,18 @@ export default function Home() {
   // Update the type of simulationResults state
   const [simulationResults, setSimulationResults] = useState<ResultData | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [stars, setStars] = useState<Array<{ top: number; left: number; duration: number; delay: number }>>([]);
+
+  useEffect(() => {
+    // Generate stars on client side only
+    const newStars = Array.from({ length: 20 }, () => ({
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      duration: 2 + Math.random() * 3,
+      delay: Math.random() * 5,
+    }));
+    setStars(newStars);
+  }, []);
 
   useEffect(() => {
     // Simulate loading for smooth entrance
@@ -230,22 +242,22 @@ export default function Home() {
         ></motion.div>
 
         {/* Floating particles (Stars) */}
-        {[...Array(20)].map((_, i) => (
+        {stars.map((star, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 rounded-full bg-white sm:w-0.5 sm:h-0.5"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
+              top: `${star.top}%`,
+              left: `${star.left}%`,
             }}
             animate={{
               opacity: [0, 0.8, 0],
               scale: [0, 1.5, 0],
             }}
             transition={{
-              duration: 2 + Math.random() * 3,
+              duration: star.duration,
               repeat: Infinity,
-              delay: Math.random() * 5,
+              delay: star.delay,
               ease: "easeInOut",
             }}
           />
