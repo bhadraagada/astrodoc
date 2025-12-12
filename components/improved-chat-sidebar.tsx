@@ -34,6 +34,7 @@ interface Chat {
   title: string;
   preview: string;
   timestamp: Date;
+  messageContent?: string;
 }
 
 interface ChatSidebarProps {
@@ -59,7 +60,9 @@ export function ChatSidebar({
   const filteredChats = chats.filter(
     (chat) =>
       chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.preview.toLowerCase().includes(searchQuery.toLowerCase())
+      chat.preview.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (chat.messageContent &&
+        chat.messageContent.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const groupChatsByDate = (chats: Chat[]) => {
@@ -243,8 +246,8 @@ export function ChatSidebar({
                       avatarBox: "w-10 h-10",
                       userButtonPopoverCard: "z-[100]",
                       userButtonPopoverActionButton:
-                        "text-white hover:text-white",
-                      userButtonPopoverActionButtonText: "text-white",
+                        "",
+                      userButtonPopoverActionButtonText: "",
                       userButtonPopoverFooter: "hidden",
                     },
                   }}
@@ -298,15 +301,17 @@ function ChatItem({
           isActive ? "text-rose-500" : "text-gray-400"
         }`}
       />
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <p
-          className={`text-sm font-medium truncate ${
+          className={`text-sm font-medium truncate max-w-full ${
             isActive ? "text-rose-300" : "text-gray-300"
           }`}
         >
           {chat.title}
         </p>
-        <p className="text-xs text-gray-400 truncate">{chat.preview}</p>
+        <p className="text-xs text-gray-400 truncate max-w-full">
+          {chat.preview}
+        </p>
       </div>
       {isHovered && (
         <button

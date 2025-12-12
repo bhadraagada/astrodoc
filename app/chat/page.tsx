@@ -3,13 +3,24 @@
 import { useConvexChat } from "@/hooks/use-convex-chat";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 export default function ChatRedirect() {
   const router = useRouter();
   const { createNewChat } = useConvexChat();
+  const { isSignedIn, isLoaded } = useAuth();
   const hasCreated = useRef(false);
 
   useEffect(() => {
+    // Wait for auth to load
+    if (!isLoaded) return;
+
+    // Check if user is signed in
+    if (!isSignedIn) {
+      router.replace("/sign-in");
+      return;
+    }
+
     // Only create once to prevent infinite loop
     if (hasCreated.current) return;
     hasCreated.current = true;
@@ -20,14 +31,16 @@ export default function ChatRedirect() {
       router.replace(`/chats/${newChatId}`);
     };
     create();
-  }, [createNewChat, router]);
+  }, [createNewChat, router, isSignedIn, isLoaded]);
 
   // Simple loading - no ChatLayoutWrapper to avoid re-render issues
   return (
     <div className="min-h-screen bg-deep-space flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-stellar-cyan/30 border-t-stellar-cyan rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-stellar-cyan font-space tracking-wider animation-pulse">Initializing Comm-Link...</p>
+        <p className="text-stellar-cyan font-space tracking-wider animation-pulse">
+          Initializing Comm-Link...
+        </p>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-// Get all chats for a user
+// Get all chats for a user with message content for search
 export const getUserChats = query({
   args: {},
   handler: async (ctx) => {
@@ -17,7 +17,25 @@ export const getUserChats = query({
       .order("desc")
       .collect();
     
-    return chats;
+    // Get all messages for each chat for search indexing
+    const chatsWithMessages = await Promise.all(
+      chats.map(async (chat) => {
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_chat_created", (q) => q.eq("chatId", chat._id))
+          .collect();
+        
+        // Concatenate all message content for search
+        const messageContent = messages.map(m => m.content).join(" ");
+        
+        return {
+          ...chat,
+          messageContent,
+        };
+      })
+    );
+    
+    return chatsWithMessages;
   },
 });
 

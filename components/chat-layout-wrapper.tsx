@@ -10,6 +10,8 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Button } from "./ui/button";
+import { Menu } from "lucide-react";
 
 export default function ChatLayoutWrapper({
   children,
@@ -18,6 +20,7 @@ export default function ChatLayoutWrapper({
 }) {
   const { chats, createNewChat, deleteChat } = useConvexChat();
   const router = useRouter();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleNewChat = async () => {
     const newChatId = await createNewChat();
@@ -37,37 +40,23 @@ export default function ChatLayoutWrapper({
     title: chat.title,
     preview: chat.preview,
     timestamp: new Date(chat.updatedAt),
+    messageContent: (chat as any).messageContent,
   }));
 
   return (
-    <div className="flex h-screen overflow-hidden bg-deep-space text-moon-silver font-sans">
-      <ChatSidebar
-        chats={sidebarChats}
-        onNewChat={handleNewChat}
-        onDeleteChat={handleDeleteChat}
-        isOpen={false}
-        onClose={() => {}}
-      />
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden fixed top-4 left-4 z-40">
-          <Button
-            onClick={() => setIsSidebarOpen(true)}
-            variant="outline"
-            size="icon"
-            className="bg-black/60 backdrop-blur-md border-stellar-cyan/50 text-stellar-cyan shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-stellar-cyan/20"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {/* We don't need Header here as it is included in the page content for better control over animations */}
-        {/* <Header /> */}
-
+    <SidebarProvider>
+      <div className="flex h-screen w-screen overflow-hidden bg-deep-space text-moon-silver font-sans">
+        <ChatSidebar
+          chats={sidebarChats}
+          onNewChat={handleNewChat}
+          onDeleteChat={handleDeleteChat}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
         <main className="flex-1 overflow-y-auto relative w-full h-full scrollbar-thin scrollbar-thumb-stellar-cyan/20 scrollbar-track-transparent">
           {children}
         </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
