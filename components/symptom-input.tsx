@@ -4,13 +4,13 @@ import { SendHorizontal, StopCircleIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
 
-// Add this at the top of your component
-// Update the SymptomInputProps type
 type SymptomInputProps = {
   selectedCategory?: string | null;
   onSubmit?: (symptom: string) => void;
-  onSimulationResult?: (result: ResultData) => void; // Add this line
+  onSimulationResult?: (result: ResultData) => void;
   isLoading?: boolean;
 };
 
@@ -36,13 +36,10 @@ export interface ResultData {
   disclaimer: string;
 }
 
-import { useUser } from "@clerk/nextjs";
-import { toast } from "sonner";
-
 export default function SymptomInput({
   selectedCategory,
   onSubmit,
-  onSimulationResult, // Add this parameter
+  onSimulationResult,
   isLoading: externalLoading = false,
 }: SymptomInputProps) {
   const { user } = useUser();
@@ -66,27 +63,18 @@ export default function SymptomInput({
     },
   ]);
   const [isLocalLoading, setIsLocalLoading] = useState(false);
-  // Add a ref to store the current abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Create a ref for the messages container
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Use either external or local loading state
   const isLoading = externalLoading || isLocalLoading;
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Function to scroll to the bottom of the messages
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      // Get the parent container (chat window)
       const chatContainer = messagesEndRef.current.parentElement;
-
-      // Only scroll the chat container, not the whole page
       if (chatContainer) {
         chatContainer.scrollTo({
           top: chatContainer.scrollHeight,
@@ -96,32 +84,24 @@ export default function SymptomInput({
     }
   };
 
-  // Add a function to handle cancellation
   const handleCancelSubmission = () => {
     toast.loading("Aborting transmission...");
 
-    // Abort the fetch request if there's an active controller
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
 
-    // Update the UI state
     setIsLocalLoading(false);
 
-    // Remove the processing message if it exists
     setMessages((prev) => {
       const lastMessage = prev[prev.length - 1];
-      if (
-        !lastMessage.isUser &&
-        lastMessage.content.includes("analyzing")
-      ) {
+      if (!lastMessage.isUser && lastMessage.content.includes("Processing")) {
         return prev.slice(0, -1);
       }
       return prev;
     });
 
-    // Add a cancellation message
     setMessages((prev) => [
       ...prev,
       {
@@ -150,12 +130,10 @@ export default function SymptomInput({
 
     setMessages((prev) => [...prev, userMessage]);
 
-    // Call the onSubmit prop if provided
     if (onSubmit) {
       onSubmit(input);
     }
 
-    // Prepare symptom with category context if available
     const symptomWithContext = selectedCategory
       ? `[Category: ${selectedCategory}] ${input}`
       : `[Category: General] ${input}`;
@@ -163,15 +141,12 @@ export default function SymptomInput({
     setInput("");
     setIsLocalLoading(true);
 
-    // Create a new AbortController for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
     try {
-      // Call the Gemini API
       const processingMessage = {
-        content:
-          "Processing biometric data... Running predictive simulations...",
+        content: "Processing biometric data... Running predictive simulations...",
         isUser: false,
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -179,52 +154,46 @@ export default function SymptomInput({
         }),
       };
 
-      // Add a processing message
       setMessages((prev) => [...prev, processingMessage]);
 
-      // Call the API with the abort signal
       let result;
       try {
-        result = await generateMedicalSimulationWithAbort(
-          symptomWithContext,
-          signal
-        );
-        console.log("API result:", result); // Log the result for debugging
+        result = await generateMedicalSimulationWithAbort(symptomWithContext, signal);
 
-        // Check if the result matches the ResultData structure
+        // Format the simulation data into a chat message
+        const resultMessage = {
+          content: formatSimulationResult(result),
+          isUser: false,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          simulationData: result,
+        };
+
+        setMessages((prev) => [...prev.slice(0, -1), resultMessage]);
+
         if (result && 'timelines' in result && Array.isArray(result.timelines) && onSimulationResult) {
           onSimulationResult(result as unknown as ResultData);
         }
 
         toast.success("Analysis complete. Trajectories mapped.");
       } catch (apiError) {
-        toast.error("Transmission failed. Retrying suggested.");
-        console.error("API error:", apiError);
-        // Check if this is an abort error
         if (apiError instanceof Error && apiError.name === "AbortError") {
           console.log("Request was aborted");
-          return; // Exit early, the cancel handler will update the UI
+          throw apiError;
         }
-        throw apiError; // Re-throw to be caught by outer catch
+        console.error("API error:", apiError);
+        toast.error("Transmission failed. Retrying suggested.");
+        throw apiError;
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
       }
 
-      // Format the simulation data into a chat message
-      const resultMessage = {
-        content: formatSimulationResult(result),
-        isUser: false,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        simulationData: result,
-      };
-
-      // Replace the processing message with the result
-      setMessages((prev) => [...prev.slice(0, -1), resultMessage]);
-    } catch (error) {
       console.error("Error generating simulation:", error);
 
-      // Show error message
       const errorMessage = {
         content: `System Warning: Analysis algorithm encountered an unexpected error. ${error instanceof Error ? "Diagnostic: " + error.message : ""
           }`,
@@ -235,7 +204,6 @@ export default function SymptomInput({
         }),
       };
 
-      // Replace the processing message with the error
       setMessages((prev) => [...prev.slice(0, -1), errorMessage]);
     } finally {
       setIsLocalLoading(false);
@@ -243,42 +211,31 @@ export default function SymptomInput({
     }
   };
 
-  // Helper function to format simulation results into a readable message
   const formatSimulationResult = (result: any): string => {
-    // Check if result has the expected structure from result.json
     if (result && result.timelines && Array.isArray(result.timelines)) {
-      // This is the structure from result.json
       const data = result as ResultData;
-
       let message = `**Analysis Complete. ${data.timelines.length} potential trajectories mapped:**\n\n`;
 
-      // Add each timeline
       data.timelines.forEach((timeline, index) => {
         const isBestPath = index === data.bestPath.pathIndex;
-
-        message += `**${timeline.path}** ${isBestPath ? "✅ (Optimal)" : ""
-          }\n`;
+        message += `**${timeline.path}** ${isBestPath ? "✅ (Optimal)" : ""}\n`;
         message += `${timeline.action}\n`;
         message += `• Risk Probability: ${timeline.riskPercentage}%\n`;
         message += `• Recovery Probability: ${timeline.recoveryPercentage}%\n`;
 
-        // Add timeline days
         if (timeline.days && Array.isArray(timeline.days)) {
           message += `• Progression:\n`;
           timeline.days.forEach((day) => {
             message += `  - Cycle ${day.day}: ${day.description}\n`;
           });
         }
-
         message += `\n`;
       });
 
-      // Add best path explanation
       if (data.bestPath && data.bestPath.explanation) {
         message += `**💡 Strategic Recommendation:**\n${data.bestPath.explanation}\n\n`;
       }
 
-      // Add disclaimer
       if (data.disclaimer) {
         message += `_${data.disclaimer}_`;
       } else {
@@ -287,51 +244,40 @@ export default function SymptomInput({
 
       return message;
     } else if (result && result.paths && Array.isArray(result.paths)) {
-      // This is the old structure that might come from the API
-      const oldData = result as SimulationResult;
-
+      const oldData = result as SimulationResult; // Using legacy type for fallback
       let message = `**Trajectories analyzed:**\n\n`;
 
-      // Add each path
       oldData.paths.forEach((path) => {
         message += `**${path.title || "Unknown Trajectory"}**\n`;
         message += `${path.description || "No data available"}\n`;
-        message += `• Risk: ${path.riskScore !== undefined ? path.riskScore : "Unknown"
-          }%\n`;
-        message += `• Recovery: ${path.recoveryChance !== undefined ? path.recoveryChance : "Unknown"
-          }%\n`;
+        message += `• Risk: ${path.riskScore !== undefined ? path.riskScore : "Unknown"}%\n`;
+        message += `• Recovery: ${path.recoveryChance !== undefined ? path.recoveryChance : "Unknown"}%\n`;
 
-        // Only add timeline if days exist
         if (path.days && Array.isArray(path.days) && path.days.length > 0) {
           message += `• Timeline:\n`;
           path.days.forEach((day) => {
-            message += `  - Cycle ${day.day || "?"}: ${day.event || "Unknown event"
-              }\n`;
+            message += `  - Cycle ${day.day || "?"}: ${day.event || "Unknown event"}\n`;
           });
         } else {
           message += `• Timeline: No temporal data\n`;
         }
-
         message += `\n`;
       });
 
-      // Add recommendation if available
       if (oldData.recommendation) {
         message += `**💡 Recommendation:**\n${oldData.recommendation}\n\n`;
       } else {
         message += `**💡 Recommendation:**\nConsult Flight Surgeon for directives.\n\n`;
       }
 
-      // Add disclaimer if available, otherwise use a default one
-      const disclaimer =
-        oldData.disclaimer ||
-        "Simulation data only. Not a substitute for professional medical directives.";
+      const disclaimer = oldData.disclaimer || "Simulation data only. Not a substitute for professional medical directives.";
       message += `_${disclaimer}_`;
 
       return message;
+    } else if (result && result.type === 'text') {
+      return result.content;
     }
 
-    // Fallback for unexpected data structure
     return "**analysis_failed: data_structure_mismatch**\n\nRetry input with specific parameters.";
   };
 
@@ -348,10 +294,10 @@ export default function SymptomInput({
 
       <div
         className={`bg-black/40 backdrop-blur-md rounded-lg shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] border border-stellar-cyan/20 p-4 mb-4 overflow-y-auto transition-all duration-300 ease-in-out scrollbar-thin scrollbar-thumb-stellar-cyan/20 scrollbar-track-transparent ${messages.length <= 2
-            ? "h-[350px]"
-            : messages.length <= 4
-              ? "h-[450px]"
-              : "h-[650px]"
+          ? "h-[350px]"
+          : messages.length <= 4
+            ? "h-[450px]"
+            : "h-[650px]"
           }`}
       >
         {messages.map((msg, i) => (
@@ -362,8 +308,8 @@ export default function SymptomInput({
           >
             <div
               className={`max-w-[85%] rounded-lg p-3 shadow-lg transition-all duration-200 ${msg.isUser
-                  ? "bg-gradient-to-r from-stellar-cyan/20 to-nebula-blue/20 border border-stellar-cyan/30 text-star-white rounded-tr-none transform hover:scale-[1.01]"
-                  : "bg-deep-space/80 border border-moon-silver/10 text-moon-silver rounded-tl-none transform hover:scale-[1.01]"
+                ? "bg-gradient-to-r from-stellar-cyan/20 to-nebula-blue/20 border border-stellar-cyan/30 text-star-white rounded-tr-none transform hover:scale-[1.01]"
+                : "bg-deep-space/80 border border-moon-silver/10 text-moon-silver rounded-tl-none transform hover:scale-[1.01]"
                 }`}
             >
               <div className="flex items-center mb-1">
@@ -380,8 +326,8 @@ export default function SymptomInput({
                 )}
                 <span
                   className={`text-[10px] uppercase tracking-wider font-tech ${msg.isUser
-                      ? "text-stellar-cyan"
-                      : "text-moon-silver/60"
+                    ? "text-stellar-cyan"
+                    : "text-moon-silver/60"
                     }`}
                 >
                   {msg.isUser ? "Cmdr. " + (user?.firstName || "User") : "AstroDoc AI"} •{" "}
@@ -393,21 +339,18 @@ export default function SymptomInput({
                   }`}
               >
                 {msg.content.split("\n").map((line, i) => {
-                  // Handle markdown-style bold text with **
                   const boldPattern = /\*\*(.*?)\*\*/g;
                   const processedLine = line.replace(
                     boldPattern,
                     "<strong class='font-medium text-lg block pt-2 text-stellar-cyan font-space'>$1</strong>"
                   );
 
-                  // Handle markdown-style italics with _
                   const italicPattern = /_(.*?)_/g;
                   const finalProcessedLine = processedLine.replace(
                     italicPattern,
                     "<em class='text-moon-silver/60 italic text-xs block pt-2 border-t border-white/5 mt-2'>$1</em>"
                   );
 
-                  // Handle bullet points
                   const bulletPattern = /^• (.*)/g;
                   const withBullets = finalProcessedLine.replace(
                     bulletPattern,
@@ -426,7 +369,6 @@ export default function SymptomInput({
             </div>
           </div>
         ))}
-        {/* Empty div at the end for scrolling to */}
         <div ref={messagesEndRef} />
       </div>
 
@@ -474,7 +416,6 @@ export default function SymptomInput({
   );
 }
 
-// Add this function to your component or import it from utils/gemini-api.ts
 const generateMedicalSimulationWithAbort = async (
   symptom: string,
   signal?: AbortSignal,
@@ -483,7 +424,7 @@ const generateMedicalSimulationWithAbort = async (
     "seek medical attention",
     "self-medicate with over-the-counter remedies",
   ]
-): Promise<SimulationResult> => {
+): Promise<any> => {
   try {
     const response = await fetch("/api/test-gemini", {
       method: "POST",
@@ -494,7 +435,7 @@ const generateMedicalSimulationWithAbort = async (
         symptom,
         choices,
       }),
-      signal, // Pass the abort signal to fetch
+      signal,
     });
 
     if (!response.ok) {
