@@ -43,13 +43,59 @@ export async function generateHealthTimelines(
         details: "Configuration Error",
       };
     }
-    // For Gemini Pro
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      safetySettings,
-    });
+    // Try multiple models as fallback (newest to oldest, most efficient first)
+    const models = [
+      "gemini-2.5-flash",      // Best price-performance, stable
+      "gemini-2.5-flash-lite", // Ultra fast, cost-efficient
+      "gemini-2.5-pro",        // Advanced thinking model, stable
+      "gemini-2.0-flash",      // Previous generation fallback
+    ];
+    let lastError: any = null;
+    
+    for (const modelName of models) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          safetySettings,
+        });
+        
+        return await generateWithRetry(model, symptom);
+      } catch (error: any) {
+        console.warn(`Model ${modelName} failed:`, error?.message);
+        lastError = error;
+        // If it's a quota error, try the next model
+        if (error?.message?.includes("quota") || error?.message?.includes("429")) {
+          continue;
+        }
+        // For other errors, throw immediately
+        throw error;
+      }
+    }
+    
+    // If all models failed, throw the last error
+    throw lastError;
+  } catch (error) {
+    console.error("Error generating health timelines:", error);
+    return {
+      error: "Failed to generate timelines. Please try again later.",
+      details: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
 
-    const prompt = `
+async function generateWithRetry(model: any, symptom: string, maxRetries = 2) {
+  let lastError: any = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        // Wait before retry (exponential backoff)
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+        console.log(`Retrying after ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      const prompt = `
     You are a medical simulation AI that generates possible future outcomes based on a person's symptoms and potential decisions.
 
     ---
@@ -116,23 +162,29 @@ export async function generateHealthTimelines(
       text.match(/```json\n([\s\S]*?)\n```/) || text.match(/{[\s\S]*}/);
     const jsonData = jsonMatch ? jsonMatch[1] || jsonMatch[0] : text;
 
-    try {
-      return JSON.parse(jsonData);
-    } catch (e) {
-      console.error("Failed to parse JSON from Gemini response", e);
-      console.log("Raw response:", text);
-      return {
-        error: "Failed to parse timeline data",
-        rawResponse: text,
-      };
+      try {
+        return JSON.parse(jsonData);
+      } catch (e) {
+        console.error("Failed to parse JSON from Gemini response", e);
+        console.log("Raw response:", text);
+        return {
+          error: "Failed to parse timeline data",
+          rawResponse: text,
+        };
+      }
+    } catch (error: any) {
+      lastError = error;
+      console.error(`Attempt ${attempt + 1} failed:`, error?.message);
+      
+      // If it's not a rate limit error, don't retry
+      if (!error?.message?.includes("429") && !error?.message?.includes("quota")) {
+        throw error;
+      }
     }
-  } catch (error) {
-    console.error("Error generating health timelines:", error);
-    return {
-      error: "Failed to generate timelines. Please try again.",
-      details: error instanceof Error ? error.message : String(error),
-    };
   }
+  
+  // All retries exhausted
+  throw lastError;
 }
 
 // Test function to verify API integration
