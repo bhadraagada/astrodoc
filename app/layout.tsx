@@ -20,14 +20,9 @@ const rajdhani = Rajdhani({
 });
 
 export const metadata: Metadata = {
-<<<<<<< HEAD
-  title: "ParaDoc",
-  description: "Parallel Healthcare Simulations",
-=======
   title: "AstroDoc - Astronaut Health Tracker",
   description: "Mission-Critical Health Monitoring & Parallel Timeline Simulations for Space Explorers",
 
->>>>>>> main
 };
 
 export default function RootLayout({
