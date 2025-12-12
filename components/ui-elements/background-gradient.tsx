@@ -32,10 +32,11 @@ export default function BackgroundGradient() {
 
   return (
     <>
-      <div className="fixed inset-0 bg-off-white dark:bg-slate-900 transition-colors duration-500 z-0" />
+      <div className="fixed inset-0 bg-deep-space transition-colors duration-500 z-0" />
 
+      {/* Deep Space Gradient Overlay */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[50vh] bg-gradient-to-b from-medical-blue/5 to-transparent dark:from-blue-900/10 dark:to-transparent z-0 opacity-70 dark:opacity-40"
+        className="fixed top-0 left-0 right-0 h-[60vh] bg-gradient-to-b from-nebula-blue/20 to-transparent z-0 opacity-60"
         animate={{
           opacity: [0.4, 0.6, 0.4],
         }}
@@ -47,9 +48,9 @@ export default function BackgroundGradient() {
       />
 
       <motion.div
-        className="fixed bottom-0 left-0 right-0 h-[30vh] bg-gradient-to-t from-mint-green/5 to-transparent dark:from-teal-900/10 dark:to-transparent z-0 opacity-70 dark:opacity-40"
+        className="fixed bottom-0 left-0 right-0 h-[40vh] bg-gradient-to-t from-cosmic-purple/20 to-transparent z-0 opacity-50"
         animate={{
-          opacity: [0.4, 0.7, 0.4],
+          opacity: [0.3, 0.6, 0.3],
         }}
         transition={{
           duration: 10,
@@ -59,8 +60,9 @@ export default function BackgroundGradient() {
         }}
       />
 
+      {/* Mouse Follower Nebula */}
       <motion.div
-        className="fixed w-[40vw] h-[40vw] rounded-full bg-gradient-to-r from-medical-blue/10 to-mint-green/10 dark:from-blue-900/10 dark:to-teal-900/10 blur-[120px] z-0"
+        className="fixed w-[40vw] h-[40vw] rounded-full bg-gradient-to-r from-stellar-cyan/10 to-cosmic-purple/10 blur-[100px] z-0 pointer-events-none"
         animate={{
           x: mousePosition.x ? mousePosition.x - 400 : 0,
           y: mousePosition.y ? mousePosition.y - 400 : 0,
@@ -72,6 +74,9 @@ export default function BackgroundGradient() {
           mass: 3,
         }}
       />
+
+      {/* Stars/Noise Texture Overlay */}
+      <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 pointer-events-none mix-blend-overlay"></div>
     </>
   )
 }

@@ -1,25 +1,25 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { HeartPulse } from "lucide-react"
+import { Rocket } from "lucide-react"
 import { useEffect, useState } from "react"
 
-// Humorous loading messages
+// Space mission loading messages
 const loadingMessages = [
-  "Sterilizing virtual equipment...",
-  "Calibrating medical sensors...",
-  "Brewing doctor's coffee...",
-  "Organizing digital stethoscopes...",
-  "Charging defibrillator...",
-  "Polishing virtual scalpels...",
-  "Warming up the MRI machine...",
-  "Feeding the lab mice...",
-  "Updating medical knowledge...",
-  "Checking patient vitals...",
-  "Reviewing medical journals...",
-  "Counting pills...",
-  "Washing virtual hands...",
-  "Putting on lab coats..."
+  "Initializing life support systems...",
+  "Calibrating health sensors...",
+  "Syncing with mission control...",
+  "Checking oxygen levels...",
+  "Monitoring vital signs...",
+  "Analyzing biometric data...",
+  "Preparing spacecraft diagnostics...",
+  "Loading astronaut protocols...",
+  "Updating health telemetry...",
+  "Scanning environmental conditions...",
+  "Synchronizing medical database...",
+  "Activating emergency systems...",
+  "Establishing secure connection...",
+  "Preparing mission briefing..."
 ]
 
 export default function SplashScreen() {
@@ -28,6 +28,21 @@ export default function SplashScreen() {
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0])
   const [loadingProgress, setLoadingProgress] = useState(0)
 
+  // Lock body scroll when splash is visible
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isVisible])
+
   useEffect(() => {
     // Multi-phase animation sequence
     const phaseTimers = [
@@ -35,13 +50,13 @@ export default function SplashScreen() {
       setTimeout(() => setAnimationPhase(2), 1200),
       setTimeout(() => setAnimationPhase(3), 1800)
     ]
-    
+
     // Random loading messages
     const messageInterval = setInterval(() => {
       const randomIndex = Math.floor(Math.random() * loadingMessages.length)
       setLoadingMessage(loadingMessages[randomIndex])
     }, 1000)
-    
+
     // Progress bar animation
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
@@ -49,18 +64,18 @@ export default function SplashScreen() {
         return newProgress > 100 ? 100 : newProgress
       })
     }, 100)
-    
-    // Set final message to "Preparing the lab..." before hiding
+
+    // Set final message to "Preparing the mission..." before hiding
     const finalMessageTimer = setTimeout(() => {
       clearInterval(messageInterval) // Stop random messages
-      setLoadingMessage("Preparing the lab...")
+      setLoadingMessage("Initiating mission sequence...")
     }, 4000)
-    
+
     // Hide splash screen after 5 seconds with a smooth transition
     const hideTimer = setTimeout(() => {
       setIsVisible(false)
     }, 5000)
-    
+
     return () => {
       phaseTimers.forEach(timer => clearTimeout(timer))
       clearInterval(messageInterval)
@@ -73,22 +88,22 @@ export default function SplashScreen() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div 
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+        <motion.div
+          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-deep-space"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
         >
-          {/* Background gradient that matches the site's color scheme */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white via-[#e6f7f0] to-[#d0f0e2]"></div>
-          
-          {/* Animated gradient orbs */}
+          {/* Deep space background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-deep-space via-nebula-blue/20 to-deep-space"></div>
+
+          {/* Animated gradient orbs - cosmic theme */}
           <div className={`absolute inset-0 transition-opacity duration-1000 ${animationPhase >= 1 ? 'opacity-70' : 'opacity-0'}`}>
-            <div className="absolute top-1/3 left-1/4 w-96 h-96 rounded-full bg-gradient-to-r from-[#4ade80]/20 to-[#22c55e]/20 blur-3xl"></div>
-            <div className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full bg-gradient-to-r from-[#22c55e]/20 to-[#16a34a]/20 blur-3xl"></div>
+            <div className="absolute top-1/3 left-1/4 w-96 h-96 rounded-full bg-gradient-to-r from-stellar-cyan/20 to-cosmic-purple/20 blur-3xl"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full bg-gradient-to-r from-cosmic-purple/20 to-nebula-blue/20 blur-3xl"></div>
           </div>
-          
+
           <div className="relative z-10 text-center">
             <motion.div
               className="inline-block"
@@ -101,26 +116,24 @@ export default function SplashScreen() {
                 repeatType: "loop",
               }}
             >
-              <HeartPulse 
-                size={80} 
-                className={`text-[#16a34a] transition-opacity duration-700 ${animationPhase >= 1 ? 'opacity-100' : 'opacity-0'}`} 
+              <Rocket
+                size={80}
+                className={`text-stellar-cyan transition-opacity duration-700 ${animationPhase >= 1 ? 'opacity-100' : 'opacity-0'}`}
               />
             </motion.div>
 
             <motion.h2
-              className={`mt-6 text-5xl font-bold bg-gradient-to-r from-[#16a34a] to-[#4ade80] bg-clip-text text-transparent transition-all duration-1000 ${
-                animationPhase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`mt-6 text-5xl font-bold bg-gradient-to-r from-stellar-cyan to-cosmic-purple bg-clip-text text-transparent transition-all duration-1000 ${animationPhase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
-              ParaDoc
+              AstroDoc
             </motion.h2>
-            
+
             <motion.p
-              className={`mt-2 text-xl text-[#16a34a]/80 transition-all duration-1000 delay-300 ${
-                animationPhase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              className={`mt-2 text-xl text-stellar-cyan/80 transition-all duration-1000 delay-300 ${animationPhase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                }`}
             >
-              Health Simulator
+              Astronaut Health Tracker
             </motion.p>
 
             {/* Loading message with animation */}
@@ -129,21 +142,19 @@ export default function SplashScreen() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className={`mt-8 text-[#16a34a]/70 text-lg italic transition-all duration-300 ${
-                animationPhase >= 3 ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`mt-8 text-stellar-cyan/70 text-lg italic transition-all duration-300 ${animationPhase >= 3 ? 'opacity-100' : 'opacity-0'
+                }`}
             >
               {loadingMessage}
             </motion.p>
 
             {/* Progress bar */}
             <motion.div
-              className={`mt-4 h-1.5 w-64 bg-white/50 rounded-full overflow-hidden mx-auto shadow-inner transition-all duration-1000 ${
-                animationPhase >= 3 ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`mt-4 h-1.5 w-64 bg-deep-space/50 rounded-full overflow-hidden mx-auto shadow-inner transition-all duration-1000 ${animationPhase >= 3 ? 'opacity-100' : 'opacity-0'
+                }`}
             >
               <motion.div
-                className="h-full bg-gradient-to-r from-[#16a34a] to-[#4ade80]"
+                className="h-full bg-gradient-to-r from-stellar-cyan to-cosmic-purple"
                 style={{ width: `${loadingProgress}%` }}
                 transition={{
                   duration: 0.1,
@@ -151,13 +162,12 @@ export default function SplashScreen() {
                 }}
               />
             </motion.div>
-            
+
             <motion.p
-              className={`mt-6 text-[#16a34a]/70 text-lg font-light transition-all duration-1000 delay-500 ${
-                animationPhase >= 3 ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`mt-6 text-stellar-cyan/70 text-lg font-light transition-all duration-1000 delay-500 ${animationPhase >= 3 ? 'opacity-100' : 'opacity-0'
+                }`}
             >
-              Revolutionizing health insights
+              Mission-critical health insights
             </motion.p>
           </div>
         </motion.div>
