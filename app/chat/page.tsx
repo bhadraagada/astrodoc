@@ -21,8 +21,9 @@ import {
   Lightbulb,
   Mic,
   Pill,
-  Stethoscope,
+  Radar,
   Thermometer,
+  TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,41 +31,41 @@ import { Suspense, useEffect, useState } from "react";
 
 // Health tips that will rotate
 const healthTips = [
-  "Stay hydrated! Aim for 8 glasses of water daily.",
-  "Take short breaks every 30 minutes when working at a computer.",
-  "Regular exercise can boost your immune system and mood.",
-  "Aim for 7-9 hours of quality sleep each night.",
-  "Incorporate colorful fruits and vegetables into every meal.",
-  "Practice deep breathing for 5 minutes daily to reduce stress.",
-  "Limit screen time before bed for better sleep quality.",
-  "Regular hand washing is one of the best ways to prevent illness.",
-  "Schedule regular check-ups with your healthcare provider.",
-  "Take time to stretch throughout the day to improve flexibility.",
+  "Mainain hydration levels. Consumption of 2000ml H2O daily recommended.",
+  "Scheduled rest cycles essential for preventing cognitive fatigue.",
+  "Physical conditioning maintains zero-g muscle mass and immunity.",
+  "target 7-9 hours of hibernation for optimal neural recovery.",
+  "Nutrient-dense fuel intake vital for prolonged mission duration.",
+  "Stress regulation protocols initiated: Deep breathing recommended.",
+  "Limit visual interface exposure prior to sleep cycle.",
+  "Sterilization protocols (hand washing) reduce bio-contaminants.",
+  "Regular bio-scans (check-ups) ensure mission readiness.",
+  "Flexibility maneuvers prevent skeletal rigidity.",
 ];
 
 // Health resources with links
 const healthResources = [
   {
-    title: "World Health Organization",
-    description: "Official health information and guidelines",
+    title: "World Health Org",
+    description: "Global Mission Directives",
     url: "https://www.who.int/",
     icon: <BookOpen size={18} />,
   },
   {
-    title: "CDC Health Information",
-    description: "Disease prevention and control resources",
+    title: "CDC Control Center",
+    description: "Bio-Defense Protocols",
     url: "https://www.cdc.gov/",
     icon: <BookOpen size={18} />,
   },
   {
-    title: "Mayo Clinic",
-    description: "Comprehensive medical information",
+    title: "Mayo Medical Station",
+    description: "Advanced Medical Database",
     url: "https://www.mayoclinic.org/",
     icon: <BookOpen size={18} />,
   },
   {
-    title: "MedlinePlus",
-    description: "Trusted health information for you",
+    title: "MedlinePlus Grid",
+    description: "Verified Medical Intel",
     url: "https://medlineplus.gov/",
     icon: <BookOpen size={18} />,
   },
@@ -84,7 +85,7 @@ const symptomCategories = [
   },
   {
     name: "Respiratory",
-    icon: <Stethoscope size={18} />,
+    icon: <Radar size={18} />,
     examples: "Cough, Shortness of breath, Wheezing",
   },
   {
@@ -116,12 +117,12 @@ const symptomCategories = [
 
 // Emergency warning signs
 const emergencyWarnings = [
-  "Difficulty breathing or shortness of breath",
-  "Persistent chest pain or pressure",
-  "New confusion or inability to wake/stay awake",
-  "Bluish lips or face",
-  "Severe, persistent pain or pressure in the abdomen",
-  "Sudden severe headache, especially with neurological symptoms",
+  "Critical Oxygen Failure (Difficulty breathing)",
+  "Structural Chest Integrity Breach (Pain/Pressure)",
+  "Neural Sync Failure (Confusion/Unconsciousness)",
+  "Hypoxic Discoloration (Bluish lips/face)",
+  "Core Reactor Instability (Severe abdomen pain)",
+  "Cranial Pressure Critical (Severe headache)",
 ];
 
 // Import the Gemini API utility
@@ -135,6 +136,18 @@ export default function Home() {
   // Update the type of simulationResults state
   const [simulationResults, setSimulationResults] = useState<ResultData | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [stars, setStars] = useState<Array<{ top: number; left: number; duration: number; delay: number }>>([]);
+
+  useEffect(() => {
+    // Generate stars on client side only
+    const newStars = Array.from({ length: 20 }, () => ({
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      duration: 2 + Math.random() * 3,
+      delay: Math.random() * 5,
+    }));
+    setStars(newStars);
+  }, []);
 
   useEffect(() => {
     // Simulate loading for smooth entrance
@@ -154,22 +167,25 @@ export default function Home() {
     };
   }, []);
 
- const handleSymptomSubmit = (symptom: string) => {
-  // We're now handling the API call directly in the SymptomInput component
-  // This function just provides a hook for potential future functionality or logging
-  console.log("Symptom submitted:", symptom);
-  
-  // We'll need to add a way to get the simulation results from the SymptomInput component
-  // This will be done by modifying the SymptomInput component to emit the results
-};
+  const handleSymptomSubmit = (symptom: string) => {
+    // We're now handling the API call directly in the SymptomInput component
+    // This function just provides a hook for potential future functionality or logging
+    console.log("Symptom submitted:", symptom);
+
+    // We'll need to add a way to get the simulation results from the SymptomInput component
+    // This will be done by modifying the SymptomInput component to emit the results
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-rose-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-500 overflow-hidden max-w-5xl mx-auto">
+    <div className="min-h-screen bg-deep-space transition-colors duration-500 overflow-hidden max-w-5xl mx-auto relative">
+      {/* Stars/Noise Texture Overlay */}
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 pointer-events-none mix-blend-overlay"></div>
+
       {/* Animated background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         {/* Existing decorative elements */}
         <motion.div
-          className="absolute top-10 left-10 w-64 h-64 rounded-full bg-pink-100/30 dark:bg-pink-900/10 blur-3xl"
+          className="absolute top-10 left-10 w-64 h-64 rounded-full bg-nebula-blue/10 blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -182,7 +198,7 @@ export default function Home() {
         ></motion.div>
 
         <motion.div
-          className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-rose-100/40 dark:bg-rose-900/10 blur-3xl"
+          className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-cosmic-purple/10 blur-3xl"
           animate={{
             scale: [1, 1.1, 1],
             opacity: [0.4, 0.6, 0.4],
@@ -196,7 +212,7 @@ export default function Home() {
         ></motion.div>
 
         <motion.div
-          className="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-purple-100/20 dark:bg-purple-900/10 blur-2xl"
+          className="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-stellar-cyan/10 blur-2xl"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.2, 0.4, 0.2],
@@ -211,7 +227,7 @@ export default function Home() {
 
         {/* New animated elements */}
         <motion.div
-          className="absolute top-1/4 left-1/3 w-56 h-56 rounded-full bg-blue-100/20 dark:bg-blue-900/10 blur-3xl"
+          className="absolute top-1/4 left-1/3 w-56 h-56 rounded-full bg-deep-space/50 blur-3xl border border-white/5"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.2, 0.4, 0.2],
@@ -225,76 +241,27 @@ export default function Home() {
           }}
         ></motion.div>
 
-        <motion.div
-          className="absolute bottom-1/4 left-1/5 w-48 h-48 rounded-full bg-indigo-100/20 dark:bg-indigo-900/10 blur-2xl"
-          animate={{
-            scale: [1, 1.15, 1],
-            opacity: [0.2, 0.3, 0.2],
-            x: [0, 15, 0],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1.5,
-          }}
-        ></motion.div>
-
-        <motion.div
-          className="absolute top-2/3 right-1/3 w-32 h-32 rounded-full bg-amber-100/20 dark:bg-amber-900/10 blur-xl"
-          animate={{
-            scale: [1, 1.25, 1],
-            opacity: [0.15, 0.3, 0.15],
-          }}
-          transition={{
-            duration: 9,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 4,
-          }}
-        ></motion.div>
-
-        {/* Floating particles */}
-        {[...Array(8)].map((_, i) => (
+        {/* Floating particles (Stars) */}
+        {stars.map((star, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 rounded-full bg-rose-300/40 dark:bg-rose-500/20"
+            className="absolute w-1 h-1 rounded-full bg-white sm:w-0.5 sm:h-0.5"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
+              top: `${star.top}%`,
+              left: `${star.left}%`,
             }}
             animate={{
-              y: [0, -30, 0],
-              opacity: [0, 0.7, 0],
-              scale: [0, 1, 0],
+              opacity: [0, 0.8, 0],
+              scale: [0, 1.5, 0],
             }}
             transition={{
-              duration: 10 + Math.random() * 10,
+              duration: star.duration,
               repeat: Infinity,
-              delay: Math.random() * 5,
+              delay: star.delay,
               ease: "easeInOut",
             }}
           />
         ))}
-
-        {/* Medical cross symbol that occasionally pulses */}
-        <motion.div
-          className="absolute top-[15%] right-[15%] w-16 h-16 opacity-10 dark:opacity-5"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.2, 0.1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        >
-          <div className="relative w-full h-full">
-            <div className="absolute top-1/2 left-0 right-0 h-3 bg-rose-400 dark:bg-rose-500 rounded-full transform -translate-y-1/2"></div>
-            <div className="absolute top-0 bottom-0 left-1/2 w-3 bg-rose-400 dark:bg-rose-500 rounded-full transform -translate-x-1/2"></div>
-          </div>
-        </motion.div>
       </div>
 
       <Suspense fallback={<LoadingScreen />}>
@@ -315,17 +282,17 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-300 to-purple-300 dark:from-rose-500 dark:to-purple-500 rounded-lg blur-sm opacity-50"></div>
-              <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg p-4 border border-rose-100 dark:border-slate-700 flex items-center">
-                <div className="bg-rose-100 dark:bg-rose-900/30 p-2 rounded-full mr-3">
-                  <Heart
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-stellar-cyan/30 to-cosmic-purple/30 rounded-lg blur-sm opacity-50"></div>
+              <div className="relative bg-black/40 backdrop-blur-md rounded-lg p-4 border border-stellar-cyan/20 flex items-center shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                <div className="bg-stellar-cyan/10 p-2 rounded-full mr-3 border border-stellar-cyan/30">
+                  <Lightbulb
                     size={18}
-                    className="text-rose-500 dark:text-rose-300"
+                    className="text-stellar-cyan"
                   />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-rose-600 dark:text-rose-300">
-                    Daily Health Tip
+                  <h3 className="text-xs font-bold text-stellar-cyan uppercase tracking-widest font-space mb-1">
+                    Mission Update
                   </h3>
                   <AnimatePresence mode="wait">
                     <motion.p
@@ -334,7 +301,7 @@ export default function Home() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.5 }}
-                      className="text-sm text-gray-600 dark:text-gray-300"
+                      className="text-sm text-moon-silver font-tech"
                     >
                       {currentTip}
                     </motion.p>
@@ -358,10 +325,10 @@ export default function Home() {
                 }}
                 className="relative"
               >
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-md p-6 border border-rose-100 dark:border-slate-700">
-                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-                    <Activity className="mr-2 h-5 w-5 text-rose-500" />
-                    Common Symptom Categories
+                <div className="bg-black/40 backdrop-blur-md rounded-xl shadow-lg p-6 border border-white/5">
+                  <h2 className="text-xl font-bold text-star-white mb-4 flex items-center font-space">
+                    <Activity className="mr-2 h-5 w-5 text-stellar-cyan" />
+                    Biometric Categories
                   </h2>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -369,26 +336,25 @@ export default function Home() {
                       <button
                         key={index}
                         onClick={() => setSelectedCategory(category.name)}
-                        className={`flex flex-col items-center p-3 rounded-lg transition-all duration-200 border ${
-                          selectedCategory === category.name
-                            ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50 shadow-sm"
-                            : "border-transparent hover:bg-rose-50/50 dark:hover:bg-slate-700/30 hover:border-rose-100 dark:hover:border-slate-600"
-                        }`}
+                        className={`flex flex-col items-center p-3 rounded-lg transition-all duration-200 border group ${selectedCategory === category.name
+                          ? "bg-stellar-cyan/10 border-stellar-cyan shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                          : "bg-deep-space/50 border-white/5 hover:bg-white/5 hover:border-stellar-cyan/50"
+                          }`}
                       >
                         <div
-                          className={`p-3 rounded-full mb-2 ${
-                            selectedCategory === category.name
-                              ? "bg-rose-200 dark:bg-rose-800/30"
-                              : "bg-rose-100/70 dark:bg-slate-700/50"
-                          }`}
+                          className={`p-3 rounded-full mb-2 transition-all duration-200 ${selectedCategory === category.name
+                            ? "bg-stellar-cyan/20 text-stellar-cyan"
+                            : "bg-white/5 text-moon-silver group-hover:text-stellar-cyan group-hover:bg-stellar-cyan/10"
+                            }`}
                         >
                           {category.icon}
                         </div>
-                        <span className="text-sm font-medium text-gray-800 dark:text-white">
+                        <span className={`text-sm font-medium transition-colors ${selectedCategory === category.name ? "text-stellar-cyan" : "text-moon-silver group-hover:text-white"
+                          }`}>
                           {category.name}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center line-clamp-1">
-                          {category.examples}
+                        <span className="text-[10px] text-gray-500 mt-1 text-center line-clamp-1 font-tech uppercase tracking-wide">
+                          {category.examples.split(',')[0]}
                         </span>
                       </button>
                     ))}
@@ -410,16 +376,16 @@ export default function Home() {
                 className="relative"
               >
                 {/* Decorative border */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-rose-400 via-pink-300 to-purple-400 dark:from-rose-600 dark:via-pink-500 dark:to-purple-600 rounded-2xl blur-sm opacity-70"></div>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-stellar-cyan/40 via-nebula-blue/40 to-cosmic-purple/40 rounded-xl blur-sm opacity-50"></div>
 
-                <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-xl p-8 border border-rose-100 dark:border-slate-700">
+                <div className="relative bg-black/60 backdrop-blur-xl rounded-xl shadow-2xl p-8 border border-white/10">
                   <Suspense
                     fallback={
                       <div className="h-[300px] flex items-center justify-center">
                         <div className="flex flex-col items-center">
-                          <div className="w-16 h-16 border-4 border-rose-300 border-t-rose-500 rounded-full animate-spin"></div>
-                          <p className="mt-4 text-rose-500 dark:text-rose-300 font-medium">
-                            Preparing your consultation...
+                          <div className="w-16 h-16 border-4 border-stellar-cyan/30 border-t-stellar-cyan rounded-full animate-spin"></div>
+                          <p className="mt-4 text-stellar-cyan font-medium font-tech tracking-wider animate-pulse">
+                            INITIALIZING SIMULATION CORE...
                           </p>
                         </div>
                       </div>
@@ -466,42 +432,29 @@ export default function Home() {
                 }}
                 className="relative"
               >
-                <div className="bg-red-50 dark:bg-red-900/20 backdrop-blur-sm rounded-xl shadow-md p-6 border border-red-100 dark:border-red-800/30">
-                  <h2 className="text-xl font-semibold text-red-700 dark:text-red-300 mb-3 flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                    Emergency Warning Signs
+                <div className="bg-critical-red/10 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-critical-red/30 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-critical-red/20 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+
+                  <h2 className="text-xl font-bold text-critical-red mb-3 flex items-center font-space relative z-10">
+                    <TriangleAlert className="mr-2 h-6 w-6" />
+                    Critical Warning Protocols
                   </h2>
-                  <p className="text-sm text-red-600 dark:text-red-300 mb-3">
-                    Seek immediate medical attention if you experience any of
-                    these symptoms:
+                  <p className="text-sm text-red-200 mb-3 font-tech relative z-10">
+                    Immediate abort and emergency evac required if following anomalies detected:
                   </p>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2 relative z-10">
                     {emergencyWarnings.map((warning, index) => (
                       <li key={index} className="flex items-start">
-                        <span className="inline-block w-2 h-2 bg-red-500 rounded-full mt-1.5 mr-2"></span>
-                        <span className="text-sm text-red-600 dark:text-red-200">
+                        <span className="inline-block w-1.5 h-1.5 bg-critical-red rounded-full mt-2 mr-2 animate-pulse"></span>
+                        <span className="text-sm text-red-100/80 font-mono">
                           {warning}
                         </span>
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-4 pt-3 border-t border-red-200 dark:border-red-800/30">
-                    <p className="text-sm text-red-600 dark:text-red-300 font-medium">
-                      In case of emergency, call your local emergency number
-                      (101 in India) immediately.
+                  <div className="mt-4 pt-3 border-t border-critical-red/30 relative z-10">
+                    <p className="text-sm text-critical-red font-bold animate-pulse">
+                      EMERGENCY FREQUENCY: 101 (Local Comms)
                     </p>
                   </div>
                 </div>
@@ -521,10 +474,10 @@ export default function Home() {
                 }}
                 className="relative"
               >
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-md p-6 border border-rose-100 dark:border-slate-700">
-                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-                    <Lightbulb className="mr-2 h-5 w-5 text-rose-500" />
-                    Trusted Health Resources
+                <div className="bg-black/40 backdrop-blur-md rounded-xl shadow-md p-6 border border-white/5">
+                  <h2 className="text-xl font-bold text-star-white mb-4 flex items-center font-space">
+                    <BookOpen className="mr-2 h-5 w-5 text-stellar-cyan" />
+                    Federated Data Archives
                   </h2>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -534,53 +487,51 @@ export default function Home() {
                         target="_blank"
                         rel="noopener noreferrer"
                         key={index}
-                        className="group flex items-center p-3 rounded-lg hover:bg-rose-50 dark:hover:bg-slate-700/50 transition-colors duration-200 border border-transparent hover:border-rose-200 dark:hover:border-slate-600"
+                        className="group flex items-center p-3 rounded-lg hover:bg-white/5 transition-all duration-200 border border-transparent hover:border-stellar-cyan/30"
                       >
-                        <div className="bg-rose-100 dark:bg-rose-900/30 p-2 rounded-full mr-3 group-hover:bg-rose-200 dark:group-hover:bg-rose-800/30 transition-colors duration-200">
+                        <div className="bg-stellar-cyan/10 p-2 rounded-full mr-3 group-hover:bg-stellar-cyan/20 transition-colors duration-200 border border-stellar-cyan/20">
                           {resource.icon}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-sm font-medium text-gray-800 dark:text-white flex items-center">
+                          <h3 className="text-sm font-bold text-star-white flex items-center group-hover:text-stellar-cyan transition-colors">
                             {resource.title}
                             <ExternalLink
                               size={12}
-                              className="ml-1 opacity-70"
+                              className="ml-1 opacity-50 group-hover:opacity-100"
                             />
                           </h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-moon-silver/60 font-tech uppercase tracking-wide">
                             {resource.description}
                           </p>
                         </div>
                         <ArrowRight
                           size={16}
-                          className="text-rose-400 dark:text-rose-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          className="text-stellar-cyan opacity-0 group-hover:opacity-100 transition-opacity duration-200 transform group-hover:translate-x-1"
                         />
                       </Link>
                     ))}
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-rose-100 dark:border-slate-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                      Disclaimer: The information provided is for general
-                      informational purposes only and should not replace
-                      professional medical advice.
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <p className="text-[10px] text-moon-silver/40 font-mono text-center">
+                      SYSTEM DISCLAIMER: SIMULATION DATA ONLY. NOT A REPLACEMENT FOR LICENSED MEDICAL OFFICERS.
                     </p>
                   </div>
                 </div>
               </motion.div>
             </main>
             <div className="fixed top-6 right-6 z-50">
-            <SignedOut>
-              <Button 
-                onClick={() => router.push("/sign-in")}
-                className="bg-gradient-to-r from-rose-400 to-purple-400 dark:from-rose-500 dark:to-purple-500 text-white hover:from-rose-500 hover:to-purple-500 dark:hover:from-rose-600 dark:hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg"
-              >
-                Sign In
-              </Button>
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
+              <SignedOut>
+                <Button
+                  onClick={() => router.push("/sign-in")}
+                  className="bg-gradient-to-r from-stellar-cyan to-nebula-blue text-white hover:from-cyan-400 hover:to-blue-600 transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)] border border-white/10 font-space tracking-wide"
+                >
+                  Identify
+                </Button>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
             </div>
           </div>
         </PageTransition>

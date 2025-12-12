@@ -46,9 +46,24 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        "medical-blue": "#4a9bd1",
-        "mint-green": "#5dc7a7",
+        // Legacy medical theme colors (kept for backward compatibility)
+        "medical-blue": "#06b6d4", // Updated to stellar-cyan
+        "mint-green": "#7c3aed", // Updated to cosmic-purple
         "off-white": "#f8fafc",
+
+        // New Astronaut Health Tracker theme
+        "deep-space": "#0a0e27",
+        "nebula-blue": "#1e3a8a",
+        "cosmic-purple": "#7c3aed",
+        "stellar-cyan": "#06b6d4",
+        "rocket-orange": "#fb923c",
+        "mars-red": "#ef4444",
+        "moon-silver": "#cbd5e1",
+        "star-white": "#f8fafc",
+        "vitals-green": "#10b981",
+        "oxygen-blue": "#3b82f6",
+        "warning-amber": "#f59e0b",
+        "critical-red": "#dc2626",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -64,15 +79,34 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        "twinkle": {
+          "0%, 100%": { opacity: "0.3" },
+          "50%": { opacity: "1" },
+        },
+        "orbit": {
+          "from": { transform: "rotate(0deg) translateX(100px) rotate(0deg)" },
+          "to": { transform: "rotate(360deg) translateX(100px) rotate(-360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float": "float 6s ease-in-out infinite",
+        "twinkle": "twinkle 3s ease-in-out infinite",
+        "orbit": "orbit 20s linear infinite",
+      },
+      fontFamily: {
+        'space': ['Orbitron', 'sans-serif'],
+        'tech': ['Rajdhani', 'sans-serif'],
       },
     },
   },
   plugins: [require("tailwindcss-animate"),
-    
+
   ],
 
 }
