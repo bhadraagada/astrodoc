@@ -6,12 +6,31 @@ import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
+import { Id } from "@/convex/_generated/dataModel";
 
 type SymptomInputProps = {
   selectedCategory?: string | null;
   onSubmit?: (symptom: string) => void;
   onSimulationResult?: (result: ResultData) => void;
   isLoading?: boolean;
+  chatId?: Id<"chats">;
+  initialMessages?: Array<{
+    content: string;
+    isUser: boolean;
+    timestamp: string;
+    simulationData?: any;
+    isStreaming?: boolean;
+  }>;
+  onMessagesChange?: (
+    messages: Array<{
+      content: string;
+      isUser: boolean;
+      timestamp: string;
+      simulationData?: any;
+      isStreaming?: boolean;
+    }>
+  ) => void;
+  onNewMessage?: (content: string, isUser: boolean) => Promise<void>;
 };
 
 // Define the structure that matches result.json
@@ -41,6 +60,10 @@ export default function SymptomInput({
   onSubmit,
   onSimulationResult,
   isLoading: externalLoading = false,
+  chatId,
+  initialMessages,
+  onMessagesChange,
+  onNewMessage,
 }: SymptomInputProps) {
   const { user } = useUser();
   const [input, setInput] = useState("");
@@ -50,36 +73,50 @@ export default function SymptomInput({
       isUser: boolean;
       timestamp: string;
       simulationData?: any;
+      isStreaming?: boolean;
     }>
-  >([
-    {
-      content:
-        "Systems Online. I'm AstroDoc, your mission health specialist. Report biometric status or symptoms.",
-      isUser: false,
-      timestamp: "Now",
-    },
-  ]);
+  >(
+    initialMessages || [
+      {
+        content:
+          "Systems Online. I'm AstroDoc, your mission health specialist. Report biometric status or symptoms.",
+        isUser: false,
+        timestamp: "Now",
+      },
+    ]
+  );
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     // Update the timestamp to local time on client mount
-    setMessages(prev => {
-      const newMessages = [...prev];
-      if (newMessages[0]) {
-        newMessages[0].timestamp = new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      }
-      return newMessages;
-    });
-  }, []);
+    if (!initialMessages) {
+      setMessages(prev => {
+        const newMessages = [...prev];
+        if (newMessages[0] && newMessages[0].timestamp === "Now") {
+          newMessages[0].timestamp = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+        return newMessages;
+      });
+    }
+  }, [initialMessages]);
+
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isLoading = externalLoading || isLocalLoading;
+
+  // Notify parent of message changes
+  useEffect(() => {
+    if (onMessagesChange) {
+      onMessagesChange(messages);
+    }
+  }, [messages, onMessagesChange]);
 
   useEffect(() => {
     scrollToBottom();
@@ -132,8 +169,9 @@ export default function SymptomInput({
     e.preventDefault();
     if (!input.trim()) return;
 
+    const userContent = input;
     const userMessage = {
-      content: input,
+      content: userContent,
       isUser: true,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -143,13 +181,21 @@ export default function SymptomInput({
 
     setMessages((prev) => [...prev, userMessage]);
 
+    // Save user message to DB
+    if (onNewMessage) {
+      // await onNewMessage(userContent, true); // Don't await here to avoid blocking UI? 
+      // Better to fire and forget for UI responsiveness, or handle error?
+      // Let's fire and forget for now or assume parent handles it
+      onNewMessage(userContent, true).catch(err => console.error("Failed to save user message", err));
+    }
+
     if (onSubmit) {
-      onSubmit(input);
+      onSubmit(userContent);
     }
 
     const symptomWithContext = selectedCategory
-      ? `[Category: ${selectedCategory}] ${input}`
-      : `[Category: General] ${input}`;
+      ? `[Category: ${selectedCategory}] ${userContent}`
+      : `[Category: General] ${userContent}`;
 
     setInput("");
     setIsLocalLoading(true);
@@ -174,8 +220,9 @@ export default function SymptomInput({
         result = await generateMedicalSimulationWithAbort(symptomWithContext, signal);
 
         // Format the simulation data into a chat message
+        const formattedContent = formatSimulationResult(result);
         const resultMessage = {
-          content: formatSimulationResult(result),
+          content: formattedContent,
           isUser: false,
           timestamp: new Date().toLocaleTimeString([], {
             hour: "2-digit",
@@ -185,6 +232,11 @@ export default function SymptomInput({
         };
 
         setMessages((prev) => [...prev.slice(0, -1), resultMessage]);
+
+        // Save AI response to DB
+        if (onNewMessage) {
+          onNewMessage(formattedContent, false).catch(err => console.error("Failed to save AI message", err));
+        }
 
         if (result && 'timelines' in result && Array.isArray(result.timelines) && onSimulationResult) {
           onSimulationResult(result as unknown as ResultData);
@@ -218,6 +270,8 @@ export default function SymptomInput({
       };
 
       setMessages((prev) => [...prev.slice(0, -1), errorMessage]);
+
+      // Also save error message if needed? Maybe not.
     } finally {
       setIsLocalLoading(false);
       abortControllerRef.current = null;
@@ -447,6 +501,7 @@ const generateMedicalSimulationWithAbort = async (
       body: JSON.stringify({
         symptom,
         choices,
+        stream: false,
       }),
       signal,
     });

@@ -1,5 +1,6 @@
 import Footer from "@/components/footer";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ConvexClientProvider } from "@/components/convex-provider";
 import type { Metadata } from "next";
 import { Inter, Orbitron, Rajdhani } from "next/font/google";
 import { Toaster } from "sonner";
@@ -19,9 +20,14 @@ const rajdhani = Rajdhani({
 });
 
 export const metadata: Metadata = {
+<<<<<<< HEAD
+  title: "ParaDoc",
+  description: "Parallel Healthcare Simulations",
+=======
   title: "AstroDoc - Astronaut Health Tracker",
   description: "Mission-Critical Health Monitoring & Parallel Timeline Simulations for Space Explorers",
 
+>>>>>>> main
 };
 
 export default function RootLayout({
@@ -35,8 +41,10 @@ export default function RootLayout({
         <ClerkProvider
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         >
-          {children}
-          <Toaster />
+          <ConvexClientProvider>
+            {children}
+            <Toaster />
+          </ConvexClientProvider>
         </ClerkProvider>
         <Footer />
       </body>
