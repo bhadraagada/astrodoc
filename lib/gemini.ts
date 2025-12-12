@@ -253,7 +253,7 @@ export async function* generateHealthTimelinesStream(
       }
 
       const prompt = `
-    You are ParaDoc, a medical simulation AI assistant that generates possible future outcomes based on a person's symptoms and potential decisions.
+    You are AstroDoc, a medical simulation AI assistant that generates possible future outcomes based on a person's symptoms and potential decisions.
     
     ${conversationContext}
     

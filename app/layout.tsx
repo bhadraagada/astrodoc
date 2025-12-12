@@ -9,20 +9,20 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 const orbitron = Orbitron({
   subsets: ["latin"],
-  variable: '--font-space',
-  display: 'swap',
+  variable: "--font-space",
+  display: "swap",
 });
 const rajdhani = Rajdhani({
   subsets: ["latin"],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-tech',
-  display: 'swap',
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-tech",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "AstroDoc - Astronaut Health Tracker",
-  description: "Mission-Critical Health Monitoring & Parallel Timeline Simulations for Space Explorers",
-
+  description:
+    "Mission-Critical Health Monitoring & Parallel Timeline Simulations for Space Explorers",
 };
 
 export default function RootLayout({
@@ -41,7 +41,6 @@ export default function RootLayout({
             <Toaster />
           </ConvexClientProvider>
         </ClerkProvider>
-        <Footer />
       </body>
     </html>
   );

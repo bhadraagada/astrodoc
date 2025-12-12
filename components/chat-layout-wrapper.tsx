@@ -1,13 +1,15 @@
 "use client";
 
-import { ChatSidebar } from "@/components/chat-sidebar";
-import Header from "@/components/header";
+import { ChatSidebar } from "@/components/improved-chat-sidebar";
 import { useConvexChat } from "@/hooks/use-convex-chat";
 import { useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function ChatLayoutWrapper({
   children,
@@ -16,7 +18,6 @@ export default function ChatLayoutWrapper({
 }) {
   const { chats, createNewChat, deleteChat } = useConvexChat();
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleNewChat = async () => {
     const newChatId = await createNewChat();
@@ -44,8 +45,8 @@ export default function ChatLayoutWrapper({
         chats={sidebarChats}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
+        isOpen={false}
+        onClose={() => {}}
       />
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Mobile Menu Button */}

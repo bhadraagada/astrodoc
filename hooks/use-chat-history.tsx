@@ -46,7 +46,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // Load chats from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("paradoc-chats");
+    const stored = localStorage.getItem("astrodoc-chats");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -65,7 +65,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Save chats to localStorage whenever they change
   useEffect(() => {
     if (chats.length > 0) {
-      localStorage.setItem("paradoc-chats", JSON.stringify(chats));
+      localStorage.setItem("astrodoc-chats", JSON.stringify(chats));
     }
   }, [chats]);
 
@@ -81,7 +81,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       messages: [
         {
           content:
-            "Hello! I'm ParaDoc, your health assistant. How can I help you today?",
+            "Hello! I'm AstroDoc, your health assistant. How can I help you today?",
           isUser: false,
           timestamp: new Date().toLocaleTimeString([], {
             hour: "2-digit",
