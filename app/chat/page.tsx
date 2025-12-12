@@ -24,10 +24,10 @@ export default function ChatRedirect() {
 
   // Simple loading - no ChatLayoutWrapper to avoid re-render issues
   return (
-    <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
+    <div className="min-h-screen bg-deep-space flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500 mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">Creating new chat...</p>
+        <div className="w-16 h-16 border-4 border-stellar-cyan/30 border-t-stellar-cyan rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-stellar-cyan font-space tracking-wider animation-pulse">Initializing Comm-Link...</p>
       </div>
     </div>
   );

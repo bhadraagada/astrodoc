@@ -9,6 +9,7 @@ interface FloatingActionButtonProps {
   tooltip: string
   position?: "bottom-right" | "bottom-left" | "top-right" | "top-left"
   onClick?: () => void
+  className?: string
 }
 
 export default function FloatingActionButton({
@@ -16,6 +17,7 @@ export default function FloatingActionButton({
   tooltip,
   position = "bottom-right",
   onClick,
+  className = "",
 }: FloatingActionButtonProps) {
   const positionClasses = {
     "bottom-right": "fixed bottom-6 right-6",
@@ -30,7 +32,7 @@ export default function FloatingActionButton({
         <Tooltip>
           <TooltipTrigger asChild>
             <motion.button
-              className="bg-gradient-to-r from-medical-blue to-mint-green text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all"
+              className={`bg-gradient-to-r from-stellar-cyan to-cosmic-purple text-star-white p-4 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:shadow-[0_0_25px_rgba(124,58,237,0.6)] transition-all border border-stellar-cyan/30 ${className}`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               initial={{ scale: 0, opacity: 0 }}

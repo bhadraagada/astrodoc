@@ -18,6 +18,8 @@ yarn-error.log*
 
 # env files
 .env
+.env.local
+
 # vercel
 .vercel
 
@@ -26,7 +28,6 @@ yarn-error.log*
 next-env.d.ts
 
 /refe
-
 
 # clerk configuration (can include secrets)
 /.clerk/
